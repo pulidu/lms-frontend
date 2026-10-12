@@ -11,14 +11,18 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [emailOtpRequired, setEmailOtpRequired] = useState<boolean | null>(null);
+  const [emailOtpRequired, setEmailOtpRequired] = useState<boolean | null>(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Verification code modal states
+  /* =========================================================================
+   * TEMPORARILY DISABLED: Verification code (OTP) modal states.
+   * Kept safely commented out so it can be re-enabled later.
+   * =========================================================================
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [verifyingEmail, setVerifyingEmail] = useState('');
+  ========================================================================= */
 
   // Fetch public auth configuration to adapt to backend settings dynamically
   useEffect(() => {
@@ -28,13 +32,10 @@ const LoginPage: React.FC = () => {
         const res = await api.get('/auth/config');
         if (isMounted && typeof res.data?.emailOtpRequired === 'boolean') {
           setEmailOtpRequired(res.data.emailOtpRequired);
-          if (!res.data.emailOtpRequired) {
-            setIsVerifying(false);
-          }
         }
       } catch (e) {
-        // Safe fallback - default to true for security if config endpoint fails
-        if (isMounted) setEmailOtpRequired(true);
+        // Safe fallback - default to false since OTP is temporarily disabled
+        if (isMounted) setEmailOtpRequired(false);
       }
     };
 
@@ -60,25 +61,31 @@ const LoginPage: React.FC = () => {
         setEmailOtpRequired(res.data.emailOtpRequired);
       }
 
+      /* =========================================================================
+       * TEMPORARILY DISABLED: OTP verification interception during login.
+       * Kept safely commented out so it can be re-enabled later.
+       * =========================================================================
       if (res.data.status === 'pending_verification') {
         // Trigger verification code modal only when OTP is required
         setVerifyingEmail(res.data.email);
         setIsVerifying(true);
         toast.success(res.data.message || 'Verification code sent to your email!');
-      } else {
-        const { accessToken, refreshToken, user } = res.data;
-        dispatch(loginSuccess({ accessToken, refreshToken, user }));
-        toast.success(`Welcome back, ${user.firstName}!`);
+        return;
+      }
+      ========================================================================= */
 
-        if (user.role === 'admin') {
-          navigate('/admin');
-        } else if (user.role === 'staff') {
-          navigate('/staff');
-        } else if (user.role === 'lecturer') {
-          navigate('/lecturer');
-        } else {
-          navigate('/student');
-        }
+      const { accessToken, refreshToken, user } = res.data;
+      dispatch(loginSuccess({ accessToken, refreshToken, user }));
+      toast.success(`Welcome back, ${user.firstName}!`);
+
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (user.role === 'staff') {
+        navigate('/staff');
+      } else if (user.role === 'lecturer') {
+        navigate('/lecturer');
+      } else {
+        navigate('/student');
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');
@@ -87,6 +94,10 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  /* =========================================================================
+   * TEMPORARILY DISABLED: OTP verification handler during login.
+   * Kept safely commented out so it can be re-enabled later.
+   * =========================================================================
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!verificationCode.trim()) {
@@ -132,6 +143,7 @@ const LoginPage: React.FC = () => {
 
   // Determine whether OTP verification view should be rendered
   const showOtpView = isVerifying && emailOtpRequired !== false;
+  ========================================================================= */
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 font-sans select-none">
@@ -148,16 +160,23 @@ const LoginPage: React.FC = () => {
           </div>
 
           <h2 className="text-xl font-normal text-slate-800 tracking-tight pt-2">
-            {showOtpView ? 'Verify your identity' : 'Sign in'}
+            {/* TEMPORARILY DISABLED: {showOtpView ? 'Verify your identity' : 'Sign in'} */}
+            Sign in
           </h2>
           <p className="text-xs text-slate-500 font-medium">
+            {/* TEMPORARILY DISABLED:
             {showOtpView
               ? `Enter the 6-character code sent to ${verifyingEmail}`
               : 'to continue to your learning dashboard'}
+            */}
+            to continue to your learning dashboard
           </p>
         </div>
 
-        {/* Conditional Verification View / Sign In Form */}
+        {/* =========================================================================
+         * TEMPORARILY DISABLED: OTP Verification View and inputs.
+         * Kept safely commented out so it can be re-enabled later.
+         * =========================================================================
         {showOtpView ? (
           <form onSubmit={handleVerifyCode} className="space-y-6">
             <div className="space-y-1">
@@ -195,62 +214,67 @@ const LoginPage: React.FC = () => {
             </div>
           </form>
         ) : (
-          <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email field */}
-            <div className="space-y-1">
+        ========================================================================= */}
+
+        <form onSubmit={handleLogin} className="space-y-6">
+          {/* Email field */}
+          <div className="space-y-1">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email or phone"
+              className="w-full border border-slate-300 rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
+            />
+          </div>
+
+          {/* Password field */}
+          <div className="space-y-1">
+            <div className="relative">
               <input
-                type="email"
+                type={showPassword ? 'text' : 'password'}
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email or phone"
-                className="w-full border border-slate-300 rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full border border-slate-300 rounded-md px-3.5 py-2.5 text-sm pr-10 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
               />
-            </div>
-
-            {/* Password field */}
-            <div className="space-y-1">
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full border border-slate-300 rounded-md px-3.5 py-2.5 text-sm pr-10 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-650 cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center text-xs">
               <button
                 type="button"
-                onClick={() => navigate('/forgot-password')}
-                className="font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-650 cursor-pointer"
               >
-                Forgot password?
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+          </div>
 
-            {/* Sign In action button */}
-            <div className="flex justify-end pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-slate-900 hover:bg-black text-white px-6 py-2.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
-            </div>
-          </form>
+          <div className="flex justify-between items-center text-xs">
+            <button
+              type="button"
+              onClick={() => navigate('/forgot-password')}
+              className="font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          {/* Sign In action button */}
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-slate-900 hover:bg-black text-white px-6 py-2.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+        </form>
+
+        {/* =========================================================================
         )}
+        ========================================================================= */}
 
         {/* Credentials hints box */}
         <div className="pt-6 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-medium">
@@ -259,7 +283,7 @@ const LoginPage: React.FC = () => {
           <span>
             {emailOtpRequired === false
               ? 'Direct password login enabled'
-              : 'Email OTP verification active'}
+              : 'Direct password login enabled'}
           </span>
         </div>
       </div>
