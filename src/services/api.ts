@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { store } from '../redux/store.js';
 import { refreshTokenSuccess, logoutSuccess } from '../redux/authSlice.js';
+import { API_URL } from '../config/api.js';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,7 +35,7 @@ api.interceptors.response.use(
 
       if (rToken) {
         try {
-          const res = await axios.post('/api/auth/refresh-token', { token: rToken });
+          const res = await axios.post(`${API_URL}/auth/refresh-token`, { token: rToken });
           const { accessToken, refreshToken } = res.data;
 
           store.dispatch(refreshTokenSuccess({ accessToken, refreshToken }));

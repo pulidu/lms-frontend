@@ -1,10 +1,11 @@
 import { io, Socket } from 'socket.io-client';
+import { SOCKET_URL } from '../config/api.js';
 
 let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
   if (!socket) {
-    socket = io(window.location.origin || 'http://localhost:5003', {
+    socket = io(SOCKET_URL || 'http://localhost:5003', {
       autoConnect: false,
     });
   }
